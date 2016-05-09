@@ -41,6 +41,10 @@ public class GPUImageNV21RawFilter extends GPUImageRawFilter
     private int mGLUniformTextureUV;
     private int mYuv2rgbMatrixLocation;
 
+    private int mYLength = 0;
+    private int mUVLength = 0;
+    private byte [] mUVData = null;
+
     private int mYTexture = NO_TEXTURE;
     private int mUVTexture = NO_TEXTURE;
 
@@ -70,9 +74,15 @@ public class GPUImageNV21RawFilter extends GPUImageRawFilter
 
     @Override
     protected void onConvert(byte[] data, int width, int height) {
+        mYLength = width*height;
+        mUVLength = width*height/2;
+        if (mUVData == null) {
+            mUVData = new byte[mUVLength];
+        }
+        System.arraycopy(data, mYLength, mUVData, 0, mUVLength);
 
-        ByteBuffer yBuf = ByteBuffer.wrap(data, 0, width * height);
-        ByteBuffer uvBuf = ByteBuffer.wrap(Arrays.copyOfRange(data, width * height, width * height / 2 * 3));
+        ByteBuffer yBuf = ByteBuffer.wrap(data, 0, mYLength);
+        ByteBuffer uvBuf = ByteBuffer.wrap(mUVData);
 
         mYTexture = loadYTexture(yBuf, width, height, mYTexture);
         mUVTexture = loadUVTexture(uvBuf, width/2,height/2, mUVTexture);

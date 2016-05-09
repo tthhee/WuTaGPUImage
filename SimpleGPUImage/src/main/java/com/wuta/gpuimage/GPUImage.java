@@ -74,6 +74,15 @@ public class GPUImage {
         mRenderer = new GPUImageRenderer(mFilter);
     }
 
+    public GPUImage(Context context, GLSurfaceView view) {
+        this(context);
+        setGLSurfaceView(view);
+    }
+
+    public GLSurfaceView getGLSurfaceView() {
+        return mGlSurfaceView;
+    }
+
     /**
      * Checks if OpenGL ES 2.0 is supported on the current device.
      *
@@ -233,6 +242,9 @@ public class GPUImage {
         requestRender();
     }
 
+    /**
+     * TODO: 下面的方法都可以放置到单独的工具类里面
+     */
     /**
      * Sets the image on which the filter should be applied from a Uri.
      *

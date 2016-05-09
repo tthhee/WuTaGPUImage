@@ -24,6 +24,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.opengl.GLES20;
+import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.Log;
 
@@ -61,6 +62,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     private final FloatBuffer mGLCubeBuffer;
     private final FloatBuffer mGLTextureBuffer;
 //    private IntBuffer mGLRgbBuffer;
+    private byte [] mPreBuffer = null;
 
     private int mOutputWidth;
     private int mOutputHeight;
@@ -79,7 +81,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     private float mBackgroundGreen = 0;
     private float mBackgroundBlue = 0;
 
-    private final FloatBuffer mGLTextureFlipBuffer;
+    // for save memory
+    private int mPreviewWidth = 0;
+    private int mPreviewHeight = 0;
     private GPUImageConvertor mImageConvertor;
 
     public GPUImageRenderer(final GPUImageFilter filter) {
@@ -96,19 +100,6 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer();
         setRotation(Rotation.NORMAL, false, false);
-
-        float[] flipTexture = TextureRotationUtil.getRotation(Rotation.NORMAL, false, true);
-        mGLTextureFlipBuffer = ByteBuffer.allocateDirect(flipTexture.length * 4)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-        mGLTextureFlipBuffer.put(flipTexture).position(0);
-
-//
-//        float [] buffer = new float[flipTexture.length];
-//        mGLTextureFlipBuffer.get(buffer);
-//        for (float b : buffer) {
-//            Log.e("rendererFlip", b + ", ");
-//        }
 
         mImageConvertor = new GPUImageConvertor(GPUImageConvertor.Type.NV21_TO_RGBA);
     }
@@ -175,7 +166,15 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     @Override
     public void onPreviewFrame(final byte[] data, final Camera camera) {
-        final Size previewSize = camera.getParameters().getPreviewSize();
+        if (data.length != mPreviewHeight*mPreviewWidth*3/2) {
+            Size previewSize = camera.getParameters().getPreviewSize();
+            mPreviewWidth = previewSize.width;
+            mPreviewHeight = previewSize.height;
+
+        Log.e("Render", "Data: " + data.length + "Width: " + mPreviewWidth + " Height: " + mPreviewHeight);
+//            mPreBuffer = new byte[mPreviewWidth*mPreviewHeight*3/2];
+        }
+
 
         if (mRunOnDraw.isEmpty()) {
             runOnDraw(new Runnable() {
@@ -195,23 +194,28 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                         mFpsCount += 1;
                     }
 
-                    long before = System.currentTimeMillis();
-                    mGLTextureId = mImageConvertor.convert(data, previewSize.width, previewSize.height);
+//                    long before = System.currentTimeMillis();
+                    mGLTextureId = mImageConvertor.convert(data, mPreviewWidth, mPreviewHeight);
 //                    Log.e("covert", "Covert Time: " + (System.currentTimeMillis() - before));
 
                     camera.addCallbackBuffer(data);
 
-                    if (mImageWidth != previewSize.width) {
-                        mImageWidth = previewSize.width;
-                        mImageHeight = previewSize.height;
+                    if (mImageWidth != mPreviewWidth || mImageHeight != mPreviewHeight) {
+                        mImageWidth = mPreviewWidth;
+                        mImageHeight = mPreviewHeight;
                         adjustImageScaling();
                     }
                 }
             });
         }
+        else {
+            camera.addCallbackBuffer(data);
+        }
     }
 
     public void setUpSurfaceTexture(final Camera camera) {
+        Size size = camera.getParameters().getPreviewSize();
+        camera.addCallbackBuffer(new byte[size.width*size.height*3/2]);
         runOnDraw(new Runnable() {
             @Override
             public void run() {
@@ -220,7 +224,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                 mSurfaceTexture = new SurfaceTexture(textures[0]);
                 try {
                     camera.setPreviewTexture(mSurfaceTexture);
-                    camera.setPreviewCallback(GPUImageRenderer.this);
+                    camera.setPreviewCallbackWithBuffer(GPUImageRenderer.this);
                     camera.startPreview();
                 } catch (IOException e) {
                     e.printStackTrace();

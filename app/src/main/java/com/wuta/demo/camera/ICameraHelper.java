@@ -1,4 +1,4 @@
-package com.wuta.demo;
+package com.wuta.demo.camera;
 
 import android.app.Activity;
 import android.hardware.Camera;
