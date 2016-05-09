@@ -121,7 +121,6 @@ public class MainActivity extends AppCompatActivity
                 Log.e("Camera", "Support: (" + r[0] + ", " + r[1] + ")");
             }
 
-            parameters.setPreviewFpsRange(60000, 60000);
             parameters.setPreviewFormat(ImageFormat.NV21);
             mCameraInstance.setParameters(parameters);
 
