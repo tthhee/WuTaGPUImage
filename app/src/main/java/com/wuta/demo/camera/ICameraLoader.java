@@ -3,6 +3,7 @@ package com.wuta.demo.camera;
 import android.app.Activity;
 
 import com.wuta.gpuimage.GPUImage;
+import com.wuta.gpuimage.IGPUImage;
 
 /**
  * Created by kejin
@@ -10,7 +11,7 @@ import com.wuta.gpuimage.GPUImage;
  */
 public interface ICameraLoader
 {
-    void onResume(Activity activity, GPUImage image);
+    void onResume(Activity activity, IGPUImage image);
 
     void onPause();
 

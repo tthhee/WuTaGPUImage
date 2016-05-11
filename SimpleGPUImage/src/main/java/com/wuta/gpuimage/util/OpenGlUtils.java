@@ -16,6 +16,9 @@
 
 package com.wuta.gpuimage.util;
 
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.pm.ConfigurationInfo;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.hardware.Camera.Size;
@@ -24,9 +27,18 @@ import android.opengl.GLUtils;
 import android.util.Log;
 
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class OpenGlUtils {
     public static final int NO_TEXTURE = -1;
+    public static final float VERTEX_CUBE[] = {
+            -1.0f, -1.0f,
+            1.0f, -1.0f,
+            -1.0f, 1.0f,
+            1.0f, 1.0f,
+    };
+
 
     public static int loadTexture(final Bitmap img, final int usedTexId) {
         return loadTexture(img, usedTexId, true);
@@ -137,5 +149,13 @@ public class OpenGlUtils {
     public static float rnd(final float min, final float max) {
         float fRandNum = (float) Math.random();
         return min + (max - min) * fRandNum;
+    }
+
+    public static boolean supportOpenGLES2(Context context) {
+        final ActivityManager activityManager = (ActivityManager)
+                context.getSystemService(Context.ACTIVITY_SERVICE);
+        final ConfigurationInfo configurationInfo =
+                activityManager.getDeviceConfigurationInfo();
+        return configurationInfo.reqGlEsVersion >= 0x20000;
     }
 }

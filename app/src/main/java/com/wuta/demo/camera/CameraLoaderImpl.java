@@ -7,6 +7,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.wuta.gpuimage.GPUImage;
+import com.wuta.gpuimage.IGPUImage;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class CameraLoaderImpl implements ICameraLoader
     private CameraLoaderImpl() {}
 
     @Override
-    public void onResume(Activity activity, GPUImage image) {
+    public void onResume(Activity activity, IGPUImage image) {
         setUpCamera(mCurrentCameraId, activity, image);
     }
 
@@ -47,10 +48,10 @@ public class CameraLoaderImpl implements ICameraLoader
     public void switchCamera(Activity activity, GPUImage image) {
         releaseCamera();
         mCurrentCameraId = (mCurrentCameraId + 1) % mCameraHelper.getNumberOfCameras();
-        setUpCamera(mCurrentCameraId, activity, image);
+//        setUpCamera(mCurrentCameraId, activity, image);
     }
 
-    private void setUpCamera(final int id, Activity activity, GPUImage image) {
+    private void setUpCamera(final int id, Activity activity, IGPUImage image) {
         mCameraInstance = getCameraInstance(id);
         if (mCameraInstance == null) {
             return;
@@ -71,7 +72,11 @@ public class CameraLoaderImpl implements ICameraLoader
                 Log.e("Camera", "Support: (" + r[0] + ", " + r[1] + ")");
             }
         }
-
+        parameters.set("fast-fps-mode", 1);
+        parameters.setRecordingHint(false);
+        parameters.setPreviewSize(800, 600);
+        parameters.setPreviewFpsRange(30000, 30000);
+        parameters.setPreviewFrameRate(30);
         parameters.setPreviewFormat(ImageFormat.NV21);
         mCameraInstance.setParameters(parameters);
 
@@ -80,7 +85,7 @@ public class CameraLoaderImpl implements ICameraLoader
         ICameraHelper.CameraInfo2 cameraInfo = mCameraHelper.getCameraInfo(mCurrentCameraId);
         boolean flipHorizontal = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT;
 
-        image.setUpCamera(mCameraInstance, orientation, flipHorizontal, false);
+        image.setupCamera(mCameraInstance, orientation, flipHorizontal, false);
     }
 
     /** A safe way to get an instance of the Camera object. */

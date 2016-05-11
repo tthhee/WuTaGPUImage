@@ -51,6 +51,7 @@ import java.util.List;
  * The main accessor for GPUImage functionality. This class helps to do common
  * tasks through a simple interface.
  */
+@Deprecated
 public class GPUImage {
     private final Context mContext;
     private final GPUImageRenderer mRenderer;

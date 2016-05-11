@@ -1,17 +1,15 @@
-package com.wuta.gpuimage;
+package com.wuta.gpuimage.convert;
 
 import android.opengl.GLES20;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.util.Arrays;
 
 /**
  * Created by kejin
  * on 2016/5/6.
  */
-public class GPUImageNV21RawFilter extends GPUImageRawFilter
+public class GPUImageNV21ConvertFilter extends GPUImageConvertFilter
 {
     public final static String TAG = "NV21";
 
@@ -41,14 +39,12 @@ public class GPUImageNV21RawFilter extends GPUImageRawFilter
     private int mGLUniformTextureUV;
     private int mYuv2rgbMatrixLocation;
 
-    private int mYLength = 0;
-    private int mUVLength = 0;
     private byte [] mUVData = null;
 
     private int mYTexture = NO_TEXTURE;
     private int mUVTexture = NO_TEXTURE;
 
-    public GPUImageNV21RawFilter()
+    public GPUImageNV21ConvertFilter()
     {
         super(NO_FILTER_VERTEX_SHADER, YUV2RGBA_FRAGMENT_SHADER);
     }
@@ -74,14 +70,12 @@ public class GPUImageNV21RawFilter extends GPUImageRawFilter
 
     @Override
     protected void onConvert(byte[] data, int width, int height) {
-        mYLength = width*height;
-        mUVLength = width*height/2;
         if (mUVData == null) {
-            mUVData = new byte[mUVLength];
+            mUVData = new byte[width*height/2];
         }
-        System.arraycopy(data, mYLength, mUVData, 0, mUVLength);
+        System.arraycopy(data, width*height, mUVData, 0, width*height/2);
 
-        ByteBuffer yBuf = ByteBuffer.wrap(data, 0, mYLength);
+        ByteBuffer yBuf = ByteBuffer.wrap(data, 0, width*height);
         ByteBuffer uvBuf = ByteBuffer.wrap(mUVData);
 
         mYTexture = loadYTexture(yBuf, width, height, mYTexture);

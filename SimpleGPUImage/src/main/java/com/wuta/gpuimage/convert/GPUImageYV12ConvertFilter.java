@@ -1,17 +1,16 @@
-package com.wuta.gpuimage;
+package com.wuta.gpuimage.convert;
 
 import android.opengl.GLES20;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.Arrays;
 
 /**
  * Created by kejin
  * on 2016/5/6.
  */
-public class GPUImageYV12RawFilter extends GPUImageRawFilter
+public class GPUImageYV12ConvertFilter extends GPUImageConvertFilter
 {
 
     public final static String TAG = "YV12";

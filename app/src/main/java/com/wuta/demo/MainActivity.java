@@ -9,22 +9,32 @@ import com.wuta.demo.camera.CameraLoaderImpl;
 import com.wuta.demo.camera.ICameraLoader;
 import com.wuta.gpuimage.GPUImage;
 import com.wuta.gpuimage.GPUImageFilter;
+import com.wuta.gpuimage.GPUImageImpl;
+import com.wuta.gpuimage.IGPUImage;
+import com.wuta.gpuimage.exfilters.GPUImageSampleFilter;
+import com.wuta.gpuimage.exfilters.GPUImageSwirlFilter;
 
 public class MainActivity extends AppCompatActivity
 {
 
-    private GPUImage mGPUImage;
+//    private GPUImage mGPUImage;
     private ICameraLoader mCameraLoader;
     private GPUImageFilter mFilter;
 
+    private IGPUImage mIGPUImage;
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams. FLAG_FULLSCREEN ,
-                WindowManager.LayoutParams. FLAG_FULLSCREEN);
+//        getWindow().setFlags(WindowManager.LayoutParams. FLAG_FULLSCREEN ,
+//                WindowManager.LayoutParams. FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
-        mGPUImage = new GPUImage(this, (GLSurfaceView) findViewById(R.id.surfaceView));
+        mIGPUImage = new GPUImageImpl(this, (GLSurfaceView) findViewById(R.id.surfaceView));
+//        mFilter = new GPUImageSampleFilter();
+//        mGPUImage = new GPUImage(this, (GLSurfaceView) findViewById(R.id.surfaceView));
+//        mGPUImage.setFilter(mFilter);
+        mFilter = new GPUImageSwirlFilter();
+        mIGPUImage.setFilter(mFilter);
 
         mCameraLoader = CameraLoaderImpl.getInstance();
     }
@@ -32,7 +42,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        mCameraLoader.onResume(this, mGPUImage);
+        mCameraLoader.onResume(this, mIGPUImage);
     }
 
     @Override

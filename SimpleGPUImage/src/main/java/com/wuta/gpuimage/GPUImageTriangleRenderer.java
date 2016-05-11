@@ -1,32 +1,19 @@
-/*
- * Copyright (C) 2012 CyberAgent
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.wuta.gpuimage;
 
-import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.hardware.Camera.PreviewCallback;
-import android.hardware.Camera.Size;
 import android.opengl.GLES20;
-import android.opengl.GLSurfaceView.Renderer;
+import android.opengl.GLSurfaceView;
 import android.util.Log;
 
+import com.wuta.gpuimage.convert.GPUImageConvertor;
+import com.wuta.gpuimage.util.FPSMeter;
+import com.wuta.gpuimage.util.OpenGlUtils;
+import com.wuta.gpuimage.util.TextureRotationUtil;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -36,22 +23,22 @@ import java.util.Queue;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import com.wuta.gpuimage.convert.GPUImageConvertor;
-import com.wuta.gpuimage.util.FPSMeter;
-import com.wuta.gpuimage.util.OpenGlUtils;
-import com.wuta.gpuimage.util.TextureRotationUtil;
-
 import static com.wuta.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
-@TargetApi(11)
-@Deprecated
-public class GPUImageRenderer implements Renderer, PreviewCallback {
+/**
+ * Created by kejin
+ * on 2016/5/10.
+ */
+public class GPUImageTriangleRenderer implements GLSurfaceView.Renderer, Camera.PreviewCallback
+{
     public static final int NO_IMAGE = -1;
     static final float CUBE[] = {
             -1.0f, -1.0f,
             1.0f, -1.0f,
             -1.0f, 1.0f,
+            1.0f, -1.0f,
             1.0f, 1.0f,
+            -1.0f, 1.0f,
     };
 
     private GPUImageFilter mFilter;
@@ -87,9 +74,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     private int mPreviewHeight = 0;
     private GPUImageConvertor mImageConvertor;
 
-    private int mGLSurfaceTexId = 0;
-
-    public GPUImageRenderer(final GPUImageFilter filter) {
+    public GPUImageTriangleRenderer(final GPUImageFilter filter) {
         mFilter = filter;
         mRunOnDraw = new LinkedList<Runnable>();
         mRunOnDrawEnd = new LinkedList<Runnable>();
@@ -141,7 +126,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         runAll(mRunOnDraw);
 //        Log.e("Renderer", "RunOnDraw: " + (System.currentTimeMillis() - before));
 //        before = System.currentTimeMillis();
-        mFilter.onDraw(mGLSurfaceTexId, mGLCubeBuffer, mGLTextureBuffer);
+        mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
 //        Log.e("Renderer", "DrawTime: " + (System.currentTimeMillis() - before));
 //        before = System.currentTimeMillis();
         runAll(mRunOnDrawEnd);
@@ -174,19 +159,16 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     @Override
     public void onPreviewFrame(final byte[] data, final Camera camera) {
-
         if (data.length != mPreviewHeight*mPreviewWidth*3/2) {
-            Size previewSize = camera.getParameters().getPreviewSize();
+            Camera.Size previewSize = camera.getParameters().getPreviewSize();
             mPreviewWidth = previewSize.width;
             mPreviewHeight = previewSize.height;
 
             Log.e("Render", "Data: " + data.length + "Width: " + mPreviewWidth + " Height: " + mPreviewHeight);
 //            mPreBuffer = new byte[mPreviewWidth*mPreviewHeight*3/2];
         }
-Log.e("PreviewFrame", "Before: " + System.currentTimeMillis());
-        FPSMeter.meter("PreviewFrame");
-        Log.e("PreviewFrame", "After: " + System.currentTimeMillis());
 
+        FPSMeter.meter("PreviewFrame");
 
         if (mRunOnDraw.isEmpty()) {
             runOnDraw(new Runnable() {
@@ -212,30 +194,19 @@ Log.e("PreviewFrame", "Before: " + System.currentTimeMillis());
     }
 
     public void setUpSurfaceTexture(final Camera camera) {
-        Size size = camera.getParameters().getPreviewSize();
+        Camera.Size size = camera.getParameters().getPreviewSize();
         camera.addCallbackBuffer(new byte[size.width*size.height*3/2]);
-//        camera.setPreviewCallbackWithBuffer(GPUImageRenderer.this);
-//        camera.startPreview();
-
         runOnDraw(new Runnable() {
             @Override
             public void run() {
                 int[] textures = new int[1];
                 GLES20.glGenTextures(1, textures, 0);
                 mSurfaceTexture = new SurfaceTexture(textures[0]);
-                mGLSurfaceTexId = textures[0];
                 try {
-//                    camera.setPreviewTexture(mSurfaceTexture);
-                    mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-                        @Override
-                        public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                            FPSMeter.meter("Surface");
-
-                        }
-                    });
-                    camera.setPreviewCallbackWithBuffer(GPUImageRenderer.this);
+                    camera.setPreviewTexture(mSurfaceTexture);
+                    camera.setPreviewCallbackWithBuffer(GPUImageTriangleRenderer.this);
                     camera.startPreview();
-                } catch (Exception e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -375,7 +346,7 @@ Log.e("PreviewFrame", "Before: " + System.currentTimeMillis());
     }
 
     public void setRotationCamera(final Rotation rotation, final boolean flipHorizontal,
-            final boolean flipVertical) {
+                                  final boolean flipVertical) {
         setRotation(rotation, flipVertical, flipHorizontal);
     }
 

@@ -1,7 +1,9 @@
-package com.wuta.gpuimage;
+package com.wuta.gpuimage.convert;
 
 import android.opengl.GLES20;
 
+import com.wuta.gpuimage.FrameBuffer;
+import com.wuta.gpuimage.Rotation;
 import com.wuta.gpuimage.util.OpenGlUtils;
 import com.wuta.gpuimage.util.TextureRotationUtil;
 
@@ -14,7 +16,7 @@ import java.nio.FloatBuffer;
  * Created by kejin
  * on 2016/5/6.
  */
-public abstract class GPUImageRawFilter
+public abstract class GPUImageConvertFilter
 {
     public final static String TAG = "RawFilter";
 
@@ -68,12 +70,12 @@ public abstract class GPUImageRawFilter
 
     private FrameBuffer mFrameBuffer = new FrameBuffer();
 
-    public GPUImageRawFilter()
+    public GPUImageConvertFilter()
     {
         this(NO_FILTER_VERTEX_SHADER, NO_FILTER_FRAGMENT_SHADER);
     }
 
-    public GPUImageRawFilter(String vertexShader, String fragmentShader)
+    public GPUImageConvertFilter(String vertexShader, String fragmentShader)
     {
         mVertexShader = vertexShader;
         mFragmentShader = fragmentShader;
