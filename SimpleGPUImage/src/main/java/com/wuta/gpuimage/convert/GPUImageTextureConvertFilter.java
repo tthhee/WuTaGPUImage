@@ -9,7 +9,7 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.support.annotation.NonNull;
 
-import com.wuta.gpuimage.FrameBuffer;
+import com.wuta.gpuimage.GPUImageFrameBuffer;
 import com.wuta.gpuimage.Rotation;
 import com.wuta.gpuimage.util.OpenGlUtils;
 import com.wuta.gpuimage.util.TextureRotationUtil;
@@ -17,7 +17,6 @@ import com.wuta.gpuimage.util.TextureRotationUtil;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 
 /**
  * 用来渲染 SurfaceTexture
@@ -62,7 +61,7 @@ public class GPUImageTextureConvertFilter {
 
     private boolean mInitialized = false;
 
-    private FrameBuffer mFrameBuffer = new FrameBuffer();
+    private GPUImageFrameBuffer mFrameBuffer = new GPUImageFrameBuffer();
 
     public GPUImageTextureConvertFilter()
     {

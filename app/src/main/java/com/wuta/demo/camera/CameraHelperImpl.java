@@ -2,6 +2,7 @@ package com.wuta.demo.camera;
 
 import android.app.Activity;
 import android.hardware.Camera;
+import android.util.Log;
 import android.view.Surface;
 
 /**
@@ -39,7 +40,8 @@ public class CameraHelperImpl implements ICameraHelper
     @Override
     public Camera openFrontCamera()
     {
-        return Camera.open(getCameraId(Camera.CameraInfo.CAMERA_FACING_FRONT));
+        int id = getCameraId(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        return Camera.open(id);
     }
 
     @Override
@@ -112,7 +114,9 @@ public class CameraHelperImpl implements ICameraHelper
         Camera.CameraInfo info = new Camera.CameraInfo();
         for (int id = 0; id < numberOfCameras; id++) {
             Camera.getCameraInfo(id, info);
+            Log.e("xo", "dd3: " + info.facing + " F: " + facing);
             if (info.facing == facing) {
+                Log.e("xo", "dd");
                 return id;
             }
         }
