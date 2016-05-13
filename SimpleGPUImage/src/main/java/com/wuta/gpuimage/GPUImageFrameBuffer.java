@@ -64,18 +64,11 @@ public class GPUImageFrameBuffer
     }
 
     public void beginDrawToFrameBuffer() {
-//        create(mWidth, mHeight);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBufferId);
-
-//        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, mWidth, mHeight, 0,
-//                GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
-//        GLES20.glViewport(0, 0, mWidth, mHeight);
         GLES20.glClearColor(0, 0, 0, 0);
     }
 
     public void showFrameBuffer() {
-//        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
-//        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, 0);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
     }
 

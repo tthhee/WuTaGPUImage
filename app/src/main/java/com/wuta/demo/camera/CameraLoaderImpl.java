@@ -65,13 +65,6 @@ public class CameraLoaderImpl implements ICameraLoader
                 parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
             }
         }
-        List<int []> ranges = parameters.getSupportedPreviewFpsRange();
-        Log.e("Camera", "supported fps size: " + (ranges== null ? 0 : ranges.size()));
-        if (ranges != null) {
-            for (int[] r : ranges) {
-                Log.e("Camera", "Support: (" + r[0] + ", " + r[1] + ")");
-            }
-        }
 //        parameters.set("fast-fps-mode", 1);
 //        parameters.setRecordingHint(false);
 //        parameters.setPreviewSize(800, 600);
@@ -95,6 +88,22 @@ public class CameraLoaderImpl implements ICameraLoader
         Camera.Parameters parameters = camera.getParameters();
         Camera.Size size = parameters.getPreviewSize();
         Log.e("camera", "Size: " + size.width + ", " + size.height);
+
+
+        List<int []> ranges = parameters.getSupportedPreviewFpsRange();
+        Log.e("Camera", "supported fps size: " + (ranges== null ? 0 : ranges.size()));
+        if (ranges != null) {
+            for (int[] r : ranges) {
+                Log.e("Camera", "Support: (" + r[0] + ", " + r[1] + ")");
+            }
+        }
+
+        List<Camera.Size> supportedSize = parameters.getSupportedPreviewSizes();
+        if (supportedSize != null) {
+            for (Camera.Size ss : supportedSize) {
+                Log.e("Camera", "Support Size: " + "(" + ss.width + ", " + ss.height);
+            }
+        }
     }
 
     /** A safe way to get an instance of the Camera object. */
