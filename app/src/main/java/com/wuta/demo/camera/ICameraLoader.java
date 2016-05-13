@@ -15,5 +15,5 @@ public interface ICameraLoader
 
     void onPause();
 
-    void switchCamera(Activity activity, GPUImage image);
+    void switchCamera(Activity activity, IGPUImage image);
 }

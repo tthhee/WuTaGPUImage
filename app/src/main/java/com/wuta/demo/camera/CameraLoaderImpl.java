@@ -45,7 +45,7 @@ public class CameraLoaderImpl implements ICameraLoader
     }
 
     @Override
-    public void switchCamera(Activity activity, GPUImage image) {
+    public void switchCamera(Activity activity, IGPUImage image) {
         releaseCamera();
         mCurrentCameraId = (mCurrentCameraId + 1) % mCameraHelper.getNumberOfCameras();
 //        setUpCamera(mCurrentCameraId, activity, image);
@@ -72,13 +72,16 @@ public class CameraLoaderImpl implements ICameraLoader
                 Log.e("Camera", "Support: (" + r[0] + ", " + r[1] + ")");
             }
         }
-        parameters.set("fast-fps-mode", 1);
-        parameters.setRecordingHint(false);
+
+//        parameters.set("fast-fps-mode", 1);
+//        parameters.setRecordingHint(false);
 //        parameters.setPreviewSize(800, 600);
-        parameters.setPreviewFpsRange(30000, 30000);
+//        parameters.setPreviewFpsRange(30000, 30000);
 //        parameters.setPreviewFrameRate(30);
-        parameters.setPreviewFormat(ImageFormat.NV21);
+//        parameters.setPreviewFormat(ImageFormat.NV21);
         mCameraInstance.setParameters(parameters);
+
+        debug(mCameraInstance);
 
 
         int orientation = mCameraHelper.getCameraDisplayOrientation(activity, mCurrentCameraId);
@@ -86,6 +89,13 @@ public class CameraLoaderImpl implements ICameraLoader
         boolean flipHorizontal = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT;
 
         image.setupCamera(mCameraInstance, orientation, flipHorizontal, false);
+    }
+
+    private void debug(Camera camera)
+    {
+        Camera.Parameters parameters = camera.getParameters();
+        Camera.Size size = parameters.getPreviewSize();
+        Log.e("camera", "Size: " + size.width + ", " + size.height);
     }
 
     /** A safe way to get an instance of the Camera object. */

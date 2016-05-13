@@ -11,13 +11,12 @@ import android.util.Log;
 /**
  * 表示一个 FBO
  */
-public class FrameBuffer
+public class GPUImageFrameBuffer
 {
-    public final static String TAG = "FrameBuffer";
+    public final static String TAG = "GPUImageFrameBuffer";
 
     private int mFrameBufferId = 0;
     private int mFrameBufferTextureId = 0;
-    private int mDepthRenderBufferId = 0;
 
     private int mWidth = 0;
     private int mHeight = 0;
@@ -26,20 +25,10 @@ public class FrameBuffer
     {
         int [] frameBuffer = new int[1];
         int [] frameBufferTexture = new int[1];
-        int [] depthRenderBuffer = new int[1];
 
         // generate frame buffer
         GLES20.glGenFramebuffers(1, frameBuffer, 0);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frameBuffer[0]);
-
-        // generate depth buffer
-        GLES20.glGenRenderbuffers(1, depthRenderBuffer, 0);
-        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, depthRenderBuffer[0]);
-        GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER, GLES20.GL_DEPTH_COMPONENT, width, height);
-
-        // attach frame buffer
-        GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,
-                GLES20.GL_DEPTH_ATTACHMENT, GLES20.GL_RENDERBUFFER, depthRenderBuffer[0]);
 
         // generate texture
         GLES20.glGenTextures(1, frameBufferTexture, 0);
@@ -62,7 +51,6 @@ public class FrameBuffer
 
         mFrameBufferId = frameBuffer[0];
         mFrameBufferTextureId = frameBufferTexture[0];
-        mDepthRenderBufferId = depthRenderBuffer[0];
 
         mWidth = width;
         mHeight = height;
@@ -111,7 +99,6 @@ public class FrameBuffer
     public void destroy()
     {
         GLES20.glDeleteTextures(1, new int[]{mFrameBufferTextureId}, 0);
-        GLES20.glDeleteRenderbuffers(1, new int[]{mDepthRenderBufferId}, 0);
         GLES20.glDeleteBuffers(1, new int[]{mFrameBufferId}, 0);
     }
 }

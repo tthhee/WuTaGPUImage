@@ -2,7 +2,7 @@ package com.wuta.gpuimage.convert;
 
 import android.opengl.GLES20;
 
-import com.wuta.gpuimage.FrameBuffer;
+import com.wuta.gpuimage.GPUImageFrameBuffer;
 import com.wuta.gpuimage.Rotation;
 import com.wuta.gpuimage.util.OpenGlUtils;
 import com.wuta.gpuimage.util.TextureRotationUtil;
@@ -68,7 +68,7 @@ public abstract class GPUImageConvertFilter
     private final FloatBuffer mCubeBuffer;
     private final FloatBuffer mTextureBuffer;
 
-    private FrameBuffer mFrameBuffer = new FrameBuffer();
+    private GPUImageFrameBuffer mFrameBuffer = new GPUImageFrameBuffer();
 
     public GPUImageConvertFilter()
     {

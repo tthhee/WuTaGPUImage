@@ -8,6 +8,7 @@ import android.hardware.Camera;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import com.wuta.gpuimage.convert.GPUImageConvertor;
 import com.wuta.gpuimage.exfilters.GPUImageDrawFilter;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -95,7 +97,7 @@ public class GPUImageImpl implements IGPUImage
 
     public GPUImageImpl(Context context, GLSurfaceView view)
     {
-        this(context, view, GPUImageConvertor.ConvertType.SURFACE_TEXTURE);
+        this(context, view, GPUImageConvertor.ConvertType.RAW_NV21_TO_RGBA);
     }
 
     public GPUImageImpl(Context context, GLSurfaceView view, GPUImageConvertor.ConvertType convertType)
@@ -204,8 +206,10 @@ public class GPUImageImpl implements IGPUImage
     @Override
     public void onPreviewFrame(final byte[] data, final Camera camera) {
 
+        FPSMeter.meter("PreviewFrame");
         if (data.length != mImageHeight*mImageWidth*3/2) {
-            Camera.Size previewSize = camera.getParameters().getPreviewSize();
+            Camera.Parameters parameters = camera.getParameters();
+            Camera.Size previewSize = parameters.getPreviewSize();
             mImageWidth = previewSize.width;
             mImageHeight = previewSize.height;
             runOnDraw(new Runnable() {
@@ -215,8 +219,6 @@ public class GPUImageImpl implements IGPUImage
                 }
             });
         }
-
-        FPSMeter.meter("PreviewFrame");
 
         if (mRunOnDraw.isEmpty()) {
             runOnDraw(new Runnable() {
@@ -263,24 +265,12 @@ public class GPUImageImpl implements IGPUImage
         runOnDraw(new Runnable() {
             @Override
             public void run() {
+                setupSurfaceTexture(camera);
 
-                if (mImageConvertor.getConvertType() == GPUImageConvertor.ConvertType.SURFACE_TEXTURE) {
-                    if (mSurfaceTexture != null) {
-                        mSurfaceTexture.release();
-                    }
-                    mSurfaceTextureId = createSurfaceTextureID();
-                    mSurfaceTexture = new SurfaceTexture(mSurfaceTextureId);
-
-                    try {
-                        camera.setPreviewTexture(mSurfaceTexture);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                else {
-                    camera.addCallbackBuffer(new byte[size.width*size.height*3/2]);
-                    camera.setPreviewCallbackWithBuffer(GPUImageImpl.this);
-                }
+                camera.addCallbackBuffer(new byte[size.width*size.height*3/2]);
+                camera.addCallbackBuffer(new byte[size.width*size.height*3/2]);
+                camera.addCallbackBuffer(new byte[size.width*size.height*3/2]);
+                camera.setPreviewCallbackWithBuffer(GPUImageImpl.this);
                 camera.startPreview();
             }
         });
@@ -390,6 +380,27 @@ public class GPUImageImpl implements IGPUImage
         }
         mImageConvertor.destroy();
         mImageFilter.destroy();
+    }
+
+    private void setupSurfaceTexture(Camera camera) {
+        if (mSurfaceTexture != null) {
+            mSurfaceTexture.release();
+        }
+
+        mSurfaceTextureId = createSurfaceTextureID();
+        mSurfaceTexture = new SurfaceTexture(mSurfaceTextureId);
+
+        mSurfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+            @Override
+            public void onFrameAvailable(final SurfaceTexture surfaceTexture) {
+                FPSMeter.meter("FrameAvailableListenerFrame");
+            }
+        });
+        try {
+            camera.setPreviewTexture(mSurfaceTexture);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void adjustImageScaling() {
