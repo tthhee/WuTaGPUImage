@@ -1,6 +1,7 @@
 package com.wuta.gpuimage;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
@@ -9,6 +10,8 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
 import com.wuta.gpuimage.convert.GPUImageConvertor;
+import com.wuta.gpuimage.exfilters.GPUImageDrawFilter;
+import com.wuta.gpuimage.glrecorder.GLRecorder;
 import com.wuta.gpuimage.util.FPSMeter;
 import com.wuta.gpuimage.util.OpenGlUtils;
 import com.wuta.gpuimage.util.TextureRotationUtil;
@@ -37,12 +40,19 @@ public class GPUImageImpl implements IGPUImage
 
     public final static float [] CUBE = OpenGlUtils.VERTEX_CUBE;
 
+    public final static float [] VERTEX_TRIANGLES = OpenGlUtils.VERTEX_TRIANGLES;
+
+    public final static float [] TEXTURE_TRIANGLES = OpenGlUtils.TEXTURE_TRIANGLES;
+
     protected Context mContext;
     protected GLSurfaceView mGLSurfaceView;
     protected GPUImageFilter mImageFilter;
+    protected GPUImageDrawFilter mDrawFilter;
     protected ScaleType mScaleType = ScaleType.CENTER_CROP;
 
     protected Camera mCamera;
+
+    private EGLConfig mEGLConfig;
 
     /**
      * has converted texture handle id
@@ -65,6 +75,8 @@ public class GPUImageImpl implements IGPUImage
 
     private final FloatBuffer mGLCubeBuffer;
     private final FloatBuffer mGLTextureBuffer;
+    private final FloatBuffer mGLVertexTrianglesBuffer;
+    private final FloatBuffer mGLTextureTrianglesBuffer;
 
     private int mOutputWidth;
     private int mOutputHeight;
@@ -78,6 +90,8 @@ public class GPUImageImpl implements IGPUImage
     private float mBackgroundRed = 0;
     private float mBackgroundGreen = 0;
     private float mBackgroundBlue = 0;
+
+    private int mCount;
 
     public GPUImageImpl(Context context, GLSurfaceView view)
     {
@@ -112,11 +126,23 @@ public class GPUImageImpl implements IGPUImage
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer();
         setRotation(Rotation.NORMAL, false, false);
+
+        mGLVertexTrianglesBuffer = ByteBuffer.allocateDirect(VERTEX_TRIANGLES.length * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        mGLVertexTrianglesBuffer.put(VERTEX_TRIANGLES).position(0);
+        mGLTextureTrianglesBuffer = ByteBuffer.allocateDirect(TEXTURE_TRIANGLES.length * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        mGLTextureTrianglesBuffer.put(TEXTURE_TRIANGLES).position(0);
     }
 
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        mEGLConfig = config;
+        mCount = 0;
+
         GLES20.glClearColor(mBackgroundRed, mBackgroundGreen, mBackgroundBlue, 1);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
@@ -129,6 +155,9 @@ public class GPUImageImpl implements IGPUImage
         mOutputWidth = width;
         mOutputHeight = height;
         GLES20.glViewport(0, 0, width, height);
+
+        GLRecorder.init(width, height, mEGLConfig/*Assign in onSurfaceCreated method*/);
+        GLRecorder.setRecordOutputFile("/sdcard/glrecord.mp4");     // Set output file path
 
         mImageConvertor.onOutputSizeChanged(width, height);
 
@@ -143,19 +172,31 @@ public class GPUImageImpl implements IGPUImage
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        FPSMeter.meter("DrawFrame");
+
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         runAll(mRunOnDraw);
         switch (mImageConvertor.getConvertType()) {
             case SURFACE_TEXTURE:
                 if (mSurfaceTexture != null) {
+                    FPSMeter.meter("DrawFrame");
                     mSurfaceTexture.updateTexImage();
                     mConvertedTextureId = mImageConvertor.convert(mSurfaceTextureId);
                 }
                 break;
         }
 
+        mCount += 1;
+
+        if (mCount == 200) {
+            GLRecorder.startRecording();
+        } else if (mCount == 2000) {
+            GLRecorder.stopRecording();
+        }
+
+        GLRecorder.beginDraw();
         mImageFilter.onDraw(mConvertedTextureId, mGLCubeBuffer, mGLTextureBuffer);
+        mDrawFilter.onDrawPicture(mGLVertexTrianglesBuffer, mGLTextureTrianglesBuffer, 2);
+        GLRecorder.endDraw();
 
         runAll(mRunOnDrawEnd);
     }
@@ -290,11 +331,39 @@ public class GPUImageImpl implements IGPUImage
     }
 
     @Override
+    public void setDrawFilter(final GPUImageDrawFilter filter) {
+        runOnDraw(new Runnable() {
+            @Override
+            public void run() {
+                final GPUImageDrawFilter oldFilter = mDrawFilter;
+                mDrawFilter = filter;
+                if (oldFilter != null) {
+                    oldFilter.destroy();
+                }
+                mDrawFilter.init();
+                GLES20.glUseProgram((mDrawFilter.getProgram()));
+                mDrawFilter.onOutputSizeChanged(mOutputWidth, mOutputHeight);
+            }
+        });
+    }
+
+    @Override
+    public void setDrawPicture(final Bitmap picture) {
+        runOnDraw(new Runnable() {
+            @Override
+            public void run() {
+                mDrawFilter.setPicture(picture);
+            }
+        });
+    }
+
+    @Override
     public void setGLSurfaceView(GLSurfaceView surfaceView) {
         mGLSurfaceView = surfaceView;
         mGLSurfaceView.setEGLContextClientVersion(2);
         mGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         mGLSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
+        mGLSurfaceView.setEGLConfigChooser(GLRecorder.getEGLConfigChooser());
         mGLSurfaceView.setRenderer(this);
         mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         mGLSurfaceView.requestRender();

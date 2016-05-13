@@ -1,9 +1,11 @@
 package com.wuta.gpuimage;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.opengl.GLSurfaceView;
 
+import com.wuta.gpuimage.exfilters.GPUImageDrawFilter;
 import com.wuta.gpuimage.util.OpenGlUtils;
 
 /**
@@ -25,6 +27,10 @@ public interface IGPUImage extends GLSurfaceView.Renderer, Camera.PreviewCallbac
     void setRotation(Rotation rotation, boolean flipHor, boolean flipVer);
 
     void setFilter(GPUImageFilter filter);
+
+    void setDrawFilter(GPUImageDrawFilter filter);
+
+    void setDrawPicture(Bitmap picture);
 
     void setGLSurfaceView(GLSurfaceView surfaceView);
 

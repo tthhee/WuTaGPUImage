@@ -39,6 +39,24 @@ public class OpenGlUtils {
             1.0f, 1.0f,
     };
 
+    public static final float VERTEX_TRIANGLES[] = {
+            -0.5f, -0.5f,
+            0.5f, -0.5f,
+            0.0f, 0.5f,
+            -1.0f, 1.0f,
+            -1.0f, 0.0f,
+            0.0f, 1.0f,
+    };
+
+    public static final float TEXTURE_TRIANGLES[] = {
+            0.3f, 0.3f,
+            0.8f, 0.3f,
+            0.3f, 0.8f,
+            0.0f, 1.0f,
+            1.0f, 0.0f,
+            0.0f, 0.0f,
+    };
+
 
     public static int loadTexture(final Bitmap img, final int usedTexId) {
         return loadTexture(img, usedTexId, true);
