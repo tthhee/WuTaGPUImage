@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/GPUImageDemo.iml" filepath="$PROJECT_DIR$/GPUImageDemo.iml" />
       <module fileurl="file://$PROJECT_DIR$/SimpleGPUImage/SimpleGPUImage.iml" filepath="$PROJECT_DIR$/SimpleGPUImage/SimpleGPUImage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/WuTaGPUImage.iml" filepath="$PROJECT_DIR$/WuTaGPUImage.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
