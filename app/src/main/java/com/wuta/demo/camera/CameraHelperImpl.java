@@ -59,7 +59,16 @@ public class CameraHelperImpl implements ICameraHelper
     @Override
     public void setCameraDisplayOrientation(Activity activity, int cameraId, Camera camera)
     {
-        int result = getCameraDisplayOrientation(activity, cameraId);
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo(cameraId, info);
+        int degrees = getCameraDisplayOrientation(activity, cameraId);
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360; // compensate the mirror
+        } else { // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
         camera.setDisplayOrientation(result);
     }
 

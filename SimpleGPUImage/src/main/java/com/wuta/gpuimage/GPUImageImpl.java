@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -174,13 +175,12 @@ public class GPUImageImpl implements IGPUImage
 
     @Override
     public void onDrawFrame(GL10 gl) {
-
+        FPSMeter.meter("DrawFrame");
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         runAll(mRunOnDraw);
         switch (mImageConvertor.getConvertType()) {
             case SURFACE_TEXTURE:
                 if (mSurfaceTexture != null) {
-                    FPSMeter.meter("DrawFrame");
                     mSurfaceTexture.updateTexImage();
                     mConvertedTextureId = mImageConvertor.convert(mSurfaceTextureId);
                 }
@@ -190,15 +190,15 @@ public class GPUImageImpl implements IGPUImage
         mCount += 1;
 
         if (mCount == 200) {
-            GLRecorder.startRecording();
+//            GLRecorder.startRecording();
         } else if (mCount == 2000) {
-            GLRecorder.stopRecording();
+//            GLRecorder.stopRecording();
         }
 
-        GLRecorder.beginDraw();
+//        GLRecorder.beginDraw();
         mImageFilter.onDraw(mConvertedTextureId, mGLCubeBuffer, mGLTextureBuffer);
         mDrawFilter.onDrawPicture(mGLVertexTrianglesBuffer, mGLTextureTrianglesBuffer, 2);
-        GLRecorder.endDraw();
+//        GLRecorder.endDraw();
 
         runAll(mRunOnDrawEnd);
     }
@@ -260,8 +260,18 @@ public class GPUImageImpl implements IGPUImage
         mImageWidth = size.width;
         mImageHeight = size.height;
 
-        mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+//        mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
+        /**
+         * 不使用 continuous 模式，自定义帧率
+         */
+        mGLSurfaceView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                requestRender();
+                mGLSurfaceView.postDelayed(this, 30);
+            }
+        },30);
         runOnDraw(new Runnable() {
             @Override
             public void run() {
@@ -382,7 +392,7 @@ public class GPUImageImpl implements IGPUImage
         mImageFilter.destroy();
     }
 
-    private void setupSurfaceTexture(Camera camera) {
+    private void setupSurfaceTexture(final Camera camera) {
         if (mSurfaceTexture != null) {
             mSurfaceTexture.release();
         }

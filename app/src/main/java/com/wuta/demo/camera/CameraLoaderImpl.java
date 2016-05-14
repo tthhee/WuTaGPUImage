@@ -36,7 +36,8 @@ public class CameraLoaderImpl implements ICameraLoader
 
     @Override
     public void onResume(Activity activity, IGPUImage image) {
-        setUpCamera(mCurrentCameraId, activity, image);
+        switchCamera(activity, image);
+//        setUpCamera(mCurrentCameraId, activity, image);
     }
 
     @Override
@@ -48,7 +49,7 @@ public class CameraLoaderImpl implements ICameraLoader
     public void switchCamera(Activity activity, IGPUImage image) {
         releaseCamera();
         mCurrentCameraId = (mCurrentCameraId + 1) % mCameraHelper.getNumberOfCameras();
-//        setUpCamera(mCurrentCameraId, activity, image);
+        setUpCamera(mCurrentCameraId, activity, image);
     }
 
     private void setUpCamera(final int id, Activity activity, IGPUImage image) {
@@ -56,6 +57,7 @@ public class CameraLoaderImpl implements ICameraLoader
         if (mCameraInstance == null) {
             return;
         }
+//        mCameraHelper.setCameraDisplayOrientation(activity, id, mCameraInstance);
         Camera.Parameters parameters = mCameraInstance.getParameters();
         // TODO adjust by getting supportedPreviewSizes and then choosing
         // the best one for screen size (best fill screen)
@@ -66,8 +68,10 @@ public class CameraLoaderImpl implements ICameraLoader
             }
         }
 //        parameters.set("fast-fps-mode", 1);
-//        parameters.setRecordingHint(false);
-//        parameters.setPreviewSize(800, 600);
+        List<Camera.Size> supportedSize = parameters.getSupportedPreviewSizes();
+//        parameters.setRecordingHint(true);
+        Camera.Size size = supportedSize.get(supportedSize.size()-1);
+        parameters.setPreviewSize(1440, 1080);
 //        parameters.setPreviewFpsRange(30000, 30000);
 //        parameters.setPreviewFrameRate(30);
 //        parameters.setPreviewFormat(ImageFormat.NV21);
@@ -80,7 +84,7 @@ public class CameraLoaderImpl implements ICameraLoader
         ICameraHelper.CameraInfo2 cameraInfo = mCameraHelper.getCameraInfo(mCurrentCameraId);
         boolean flipHorizontal = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT;
 
-        image.setupCamera(mCameraInstance, orientation, flipHorizontal, false);
+        image.setupCamera(mCameraInstance, orientation, false, flipHorizontal);
     }
 
     private void debug(Camera camera)

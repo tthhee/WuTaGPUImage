@@ -36,14 +36,15 @@ public class MainActivity extends AppCompatActivity
 //                WindowManager.LayoutParams. FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
-        mIGPUImage = new GPUImageImpl(this, (GLSurfaceView) findViewById(R.id.surfaceView)); //, GPUImageConvertor.ConvertType.RAW_NV21_TO_RGBA);
+        mIGPUImage = new GPUImageImpl(this, (GLSurfaceView) findViewById(R.id.surfaceView)
+        );//, GPUImageConvertor.ConvertType.SURFACE_TEXTURE);
 //        mFilter = new GPUImageSampleFilter();
 //        mGPUImage = new GPUImage(this, (GLSurfaceView) findViewById(R.id.surfaceView));
 //        mGPUImage.setFilter(mFilter);
         mFilter = new GPUImageSwirlFilter();
 
         mDrawFilter = new GPUImageDrawFilter();
-        mIGPUImage.setFilter(mFilter);
+//        mIGPUImage.setFilter(mFilter);
         mIGPUImage.setDrawFilter(mDrawFilter);
 
         Bitmap picture = BitmapFactory.decodeResource(getResources(), R.mipmap.testpic);
